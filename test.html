@@ -642,6 +642,7 @@ startBtn.addEventListener('click', async () => {
     }
     zip.file(`betmc_ui/betmc_common/${animNamespace}`, JSON.stringify(animObj, null, 2));
 
+...
     // Add frames (resizing if cần)
     let framesAdded = 0;
     for (const frame of frames) {
@@ -650,7 +651,7 @@ startBtn.addEventListener('click', async () => {
         const selectedResolution = resolutionSelect.value;
         if (selectedResolution === '1080p') {
           frameBlob = await createResizedFrame(frame.blob, 1920, 1080);
-        } else if (selectedResolution === '7020p') {
+        } else if (selectedResolution === '2160p') { // Đã sửa lại đúng 4K
           frameBlob = await createResizedFrame(frame.blob, 3840, 2160);
         }
         zip.file(`subpacks/1080/betmc_background/betmc_background_frame/betmc_img_${framesAdded+1}_frame.jpg`, frameBlob);
@@ -669,92 +670,92 @@ startBtn.addEventListener('click', async () => {
     }
 
     // First frame as icon & static background
-try {
-  const iconBlob = frames[0].blob;
-  zip.file("pack_icon.png", iconBlob);
-  zip.file("subpacks/0/betmc_background/betmc_background_static_patch.jpg", iconBlob);
-  packProgressBar.style.width = '95%';
-  packProgress.textContent = '95%';
-} catch (e) {
-  console.error('Lỗi khi thêm pack_icon:', e);
-}
-
-// === ÂM THANH MENU ===
-try {
-  const musicFiles = document.getElementById("musicUpload")?.files;
-  if (musicFiles && musicFiles.length > 0) {
-    const soundFolder = "sound/music/menu/";
-
-    // Hàm thêm file âm thanh vào zip
-    const addMusicFile = (targetName, sourceFile) => {
-      zip.file(`${soundFolder}${targetName}.ogg`, sourceFile);
-    };
-
-    if (musicFiles.length === 1) {
-      // 1 file -> copy ra 4
-      for (let i = 1; i <= 4; i++) addMusicFile(`menu${i}`, musicFiles[0]);
-    } else if (musicFiles.length === 2) {
-      // 2 file -> mỗi file 2 lần
-      for (let i = 1; i <= 2; i++) addMusicFile(`menu${i}`, musicFiles[0]);
-      for (let i = 3; i <= 4; i++) addMusicFile(`menu${i}`, musicFiles[1]);
-    }
-  }
-
-  // --- Generate zip (nén) ---
-  try {
-    console.log('Bắt đầu nén zip (có thể mất thời gian)...');
-    const content = await zip.generateAsync({
-      type: "blob",
-      compression: "DEFLATE",
-      compressionOptions: { level: 9 }
-    });
-
-    packProgressBar.style.width = '100%';
-    packProgress.textContent = '100%';
-    const packTime = ((performance.now() - packStart) / 1000).toFixed(1);
-    status.textContent = `Đã tạo gói thành công trong ${packTime}s!`;
-    console.log('Zip đã tạo xong, blob size:', content.size || '(k/c)');
-
-    // Tạo link tải
-    const url = URL.createObjectURL(content);
-    downloadBtn.onclick = () => {
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'BG_animation_for_BetMc.mcpack';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    };
-
-    // Hiển thị nút tải
-    downloadBtn.style.display = 'inline-block';
-    console.log('Nút tải đã hiển thị');
-
-    // Tự động scroll tới nút tải trên điện thoại (tốt cho UX)
     try {
-      downloadBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const iconBlob = frames[0].blob;
+      zip.file("pack_icon.png", iconBlob);
+      zip.file("subpacks/0/betmc_background/betmc_background_static_patch.jpg", iconBlob);
+      packProgressBar.style.width = '95%';
+      packProgress.textContent = '95%';
     } catch (e) {
-      console.log("abc", e);
+      console.error('Lỗi khi thêm pack_icon:', e);
     }
 
-  } catch (zipErr) {
-    console.error('Lỗi khi nén zip:', zipErr);
-    alert('Lỗi khi nén gói: ' + (zipErr.message || zipErr));
-    status.textContent = 'Lỗi khi nén gói tài nguyên';
-    startBtn.disabled = false;
-    return;
-  }
+    // === ÂM THANH MENU ===
+    try {
+      const musicFiles = document.getElementById("musicUpload")?.files;
+      if (musicFiles && musicFiles.length > 0) {
+        const soundFolder = "sound/music/menu/";
 
-  const totalTime = ((performance.now() - startTime) / 1000).toFixed(1);
-  console.log('Toàn bộ quá trình hoàn tất trong', totalTime, 'giây');
-  startBtn.disabled = false;
+        // Hàm thêm file âm thanh vào zip
+        const addMusicFile = (targetName, sourceFile) => {
+          zip.file(`${soundFolder}${targetName}.ogg`, sourceFile);
+        };
 
-} catch (errMain) {
-  console.error('Lỗi chính:', errMain);
-  alert('Đã xảy ra lỗi: ' + (errMain.message || errMain));
-  status.textContent = 'Đã xảy ra lỗi';
-  startBtn.disabled = false;
-}
+        if (musicFiles.length === 1) {
+          // 1 file -> copy ra 4
+          for (let i = 1; i <= 4; i++) addMusicFile(`menu${i}`, musicFiles[0]);
+        } else if (musicFiles.length === 2) {
+          // 2 file -> mỗi file 2 lần
+          for (let i = 1; i <= 2; i++) addMusicFile(`menu${i}`, musicFiles[0]);
+          for (let i = 3; i <= 4; i++) addMusicFile(`menu${i}`, musicFiles[1]);
+        }
+      }
+
+      // --- Generate zip (nén) ---
+      try {
+        console.log('Bắt đầu nén zip (có thể mất thời gian)...');
+        const content = await zip.generateAsync({
+          type: "blob",
+          compression: "DEFLATE",
+          compressionOptions: { level: 9 }
+        });
+
+        packProgressBar.style.width = '100%';
+        packProgress.textContent = '100%';
+        const packTime = ((performance.now() - packStart) / 1000).toFixed(1);
+        status.textContent = `Đã tạo gói thành công trong ${packTime}s!`;
+        console.log('Zip đã tạo xong, blob size:', content.size || '(k/c)');
+
+        // Tạo link tải
+        const url = URL.createObjectURL(content);
+        downloadBtn.onclick = () => {
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'BG_animation_for_BetMc.mcpack';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        };
+
+        // Hiển thị nút tải
+        downloadBtn.style.display = 'inline-block';
+        console.log('Nút tải đã hiển thị');
+
+        // Tự động scroll tới nút tải trên điện thoại (tốt cho UX)
+        try {
+          downloadBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } catch (e) {
+          console.log("abc", e);
+        }
+
+      } catch (zipErr) {
+        console.error('Lỗi khi nén zip:', zipErr);
+        alert('Lỗi khi nén gói: ' + (zipErr.message || zipErr));
+        status.textContent = 'Lỗi khi nén gói tài nguyên';
+        startBtn.disabled = false;
+        return;
+      }
+
+      const totalTime = ((performance.now() - startTime) / 1000).toFixed(1);
+      console.log('Toàn bộ quá trình hoàn tất trong', totalTime, 'giây');
+      startBtn.disabled = false;
+
+    } catch (errMain) {
+      console.error('Lỗi chính:', errMain);
+      alert('Đã xảy ra lỗi: ' + (errMain.message || errMain));
+      status.textContent = 'Đã xảy ra lỗi';
+      startBtn.disabled = false;
+    }
 });
 </script>
 </body>
