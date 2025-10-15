@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Trình tạo gói tài nguyên Minecraft (Việt hóa)</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+  <style>
+    body {
+  font-family: "Segoe UI", Arial, sans-serif;
+  margin: 0;
+  padding: 20px;
+
+  /* 🌈 Nền gradient chính (xanh - tím - xanh ngọc) */
+  background: linear-gradient(135deg, #00c3ff, #7b2ff7, #00e5ff, #b5ffff);
+  background-size: 300% 300%;
+  animation: bgFlow 10s ease-in-out infinite alternate;
+
+  min-height: 100vh;
+  color: #fff;
+}
+
+/* 💫 Hiệu ứng gradient di chuyển */
+@keyframes bgFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+    .container {
+      background: rgba(255,255,255,0.06);
+      backdrop-filter: blur(8px);
+      padding: 28px;
+      border-radius: 16px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+      margin-top: 36px;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 26px;
+      margin-bottom: 6px;
+      font-weight: 700;
+    }
+
+    .meta {
+      text-align: center;
+      color: rgba(255,255,255,0.85);
+      margin-bottom: 14px;
+      font-size: 15px;
+    }
+
+  .credit {
+  font-weight: 700;
+  font-size: 15px;
+  background: linear-gradient(90deg, #ff0000, #ff9900, #ffd700, #ff0000, #ff9900);
+  background-size: 500%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: flame 8s linear infinite;
+  text-align: center;
+}
+
+@keyframes flame {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
+
+    .upload-zone {
+      border: 2px dashed rgba(255,255,255,0.18);
+      padding: 18px;
+      text-align: center;
+      margin: 18px 0;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.22s ease;
+      background: rgba(255,255,255,0.02);
+    }
+    .upload-zone:hover { transform: translateY(-3px); background: rgba(255,255,255,0.03); }
+    .upload-zone.dragover { border-color: #90caf9; background: rgba(144,202,249,0.06); }
+
+    label, span { font-size: 16px; color: #eaf2ff; }
+    input[type="number"], select {
+      padding: 8px;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+      font-size: 15px;
+      margin-top: 6px;
+    }
+
+.download-btn {
+  background: linear-gradient(90deg, #00c3ff, #0078ff);
+  color: white;
+  font-weight: bold;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+.download-btn:hover {
+  transform: scale(1.05);
+}
+
+.music-note {
+  color: #fff;
+  font-family: "Segoe UI", Arial, sans-serif;
+  font-size: 17px;
+  line-height: 1.6;
+  text-align: center;
+  margin: 30px auto 20px auto;
+  max-width: 600px;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 15px 20px;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+}
+
+/* Container chính */
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: space-between;
+  margin: 25px 0;
+}
+
+/* Label */
+.controls label {
+  font-weight: 600;
+  font-size: 15px;
+  color: #e0e0e0;
+  text-shadow: 0 0 3px rgba(0,0,0,0.4);
+}
+
+/* Input & Select — đồng bộ kích thước và màu nền */
+.controls input[type="number"],
+.controls select {
+  appearance: none; /* bỏ UI mặc định của browser */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  width: 250px; /* chiều dài cố định */
+  padding: 10px 14px;
+  font-size: 16px;
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  background-color: #1e1e1e;
+  color: #fff;
+  outline: none;
+  box-shadow: inset 0 0 6px rgba(0,0,0,0.6);
+  transition: all 0.25s ease;
+}
+
+/* Khi hover / focus */
+.controls input[type="number"]:hover,
+.controls select:hover,
+.controls input[type="number"]:focus,
+.controls select:focus {
+  background-color: #292929;
+  border-color: #00c3ff;
+  box-shadow: 0 0 8px rgba(0, 195, 255, 0.4);
+}
+
+/* Option (bên trong dropdown) */
+.controls select option {
+  background-color: #1e1e1e;
+  color: #fff;
+}
+
+/* Fix chiều cao / font trên mobile */
+@media (max-width: 600px) {
+  .controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .controls input[type="number"],
+  .controls select {
+    width: 100%;
+    font-size: 18px;
+  }
+}
+
+#musicUpload {
+  background: #1e1e1e;
+  color: #fff;
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  padding: 8px;
+  width: 250px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+#musicUpload:hover {
+  background: #292929;
+  border-color: #00c3ff;
+  box-shadow: 0 0 8px rgba(0, 195, 255, 0.4);
+}
+
+    button {
+      background: linear-gradient(90deg, #42a5f5, #5c6bc0);
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 12px;
+      transition: transform 0.18s, box-shadow 0.18s;
+      font-weight: 700;
+    }
+    button:hover { transform: scale(1.03); box-shadow: 0 6px 18px rgba(0,0,0,0.28); }
+    button:disabled { background: gray; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    #downloadBtn {
+      display: none;
+      background: linear-gradient(90deg, #66bb6a, #388e3c);
+    }
+
+    .progress-container { margin-top: 14px; display: none; }
+    .progress-label { display:flex; justify-content:space-between; font-size:14px; color:rgba(255,255,255,0.9); }
+    .progress {
+      width: 100%;
+      height: 18px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 12px;
+      overflow: hidden;
+      margin: 6px 0 10px;
+    }
+    .progress-bar { width: 0%; height: 100%; background: linear-gradient(90deg,#42a5f5,#5c6bc0); transition: width 0.25s ease; }
+    .progress-bar.pack { background: linear-gradient(90deg,#81c784,#388e3c); }
+
+    .status { margin-top: 6px; color: #e6f2ff; font-style: italic; }
+
+    /* Console debug box */
+    #logBox {
+      background: rgba(0,0,0,0.75);
+      color: #b8f2b8;
+      padding: 10px;
+      font-size: 13px;
+      height: 180px;
+      overflow-y: auto;
+      border-radius: 10px;
+      margin-top: 16px;
+      font-family: monospace;
+      white-space: pre-line;
+    }
+
+    footer { margin-top: 10px; font-size: 13px; color: rgba(255,255,255,0.8); text-align:center; }
+
+    a { color: #dff1ff; text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <!-- Background animated (đặt càng đầu càng tốt) -->
+<div class="bg-animated" aria-hidden="true"></div>
+  <div class="container">
+    <h1>Trình tạo gói tài nguyên Minecraft (BetMC)</h1>
+    <div class="meta">
+      <span>Kích thước đề xuất: ~15s ở 24fps (điện thoại có thể crash nếu quá nặng)</span>
+      <br><span>Wallpaper: <a href="https://moewalls.com/" target="_blank">Moewall</a></span>
+    </div>
+
+    <div id="uploadZone" class="upload-zone">
+      <p>Kéo thả video vào đây hoặc nhấn để chọn</p>
+      <input type="file" id="fileInput" accept="video/*" style="display:none;">
+    </div>
+
+<p class="music-note">
+  🎶 Để gói tài nguyên của bạn phát âm thanh, hãy <b>bấm vào nút "DOWNLOAD MusicExtension"</b> ở dưới và xem video để biết cách gắn vào gói của bạn!
+</p>
+
+<button id="musicExtension" class="download-btn">
+  🎵 DOWNLOAD MusicExtension
+</button>
+
+<div class="controls">
+  <label for="musicUpload">🎵 Chọn âm thanh menu (1–2 tệp .mp3/.ogg/.wav):</label><br>
+  <input type="file" id="musicUpload" accept="audio/*" multiple>
+</div>
+
+    <div class="controls">
+      <div>
+        <label for="fpsInput">FPS (khung hình/giây)</label><br>
+        <input type="number" id="fpsInput" min="1" max="120" value="24" style="width:110px;">
+      </div>
+
+      <div>
+        <label for="resolutionSelect">Độ phân giải</label><br>
+        <select id="resolutionSelect">
+          <option value="original">Gốc</option>
+          <option value="1080p">1080p (1920×1080)</option>
+          <option value="7020p">4K (3840×2160)</option>
+        </select>
+      </div>
+
+      <div style="flex:1"></div>
+
+      <div style="display:flex; gap:8px;">
+        <button id="startBtn" disabled>Tạo gói tài nguyên</button>
+        <button id="downloadBtn">Tải xuống</button>
+      </div>
+    </div>
+
+    <div class="progress-container" id="progressContainer">
+      <div class="progress-label">
+        <span>Trích xuất khung hình</span>
+        <span id="frameProgress">0%</span>
+      </div>
+      <div class="progress"><div id="frameProgressBar" class="progress-bar"></div></div>
+
+      <div class="progress-label">
+        <span>Tạo gói tài nguyên</span>
+        <span id="packProgress">0%</span>
+      </div>
+      <div class="progress"><div id="packProgressBar" class="progress-bar pack"></div></div>
+
+      <div class="status" id="status">Sẵn sàng</div>
+    </div>
+
+    <!-- Console debug luôn hiện sẵn -->
+    <div id="logBox">--- Console debug (hiện log & lỗi) ---</div>
+
+    <footer>
+      <!-- credit -->
+      <div class="credit">Created by: zaggvn</div>
+      <div class="credit">Tối ưu & Việt hoá bởi: Khangbo84</div>
+    </footer>
+  </div>
+
+<script>
+/* ============================
+   Console debug inline
+   ============================ */
+(function () {
+  const logBox = document.getElementById("logBox");
+  function appendLog(prefix, ...args) {
+    try {
+      const time = new Date().toLocaleTimeString();
+      const msg = args.map(a => {
+        try { return typeof a === 'string' ? a : JSON.stringify(a); } catch(e){ return String(a); }
+      }).join(' ');
+      logBox.textContent += `\n[${time}] ${prefix} ${msg}`;
+      logBox.scrollTop = logBox.scrollHeight;
+    } catch(e) { /* ignore */ }
+  }
+
+  const oldLog = console.log;
+  const oldErr = console.error;
+  console.log = function(...args) { oldLog.apply(console, args); appendLog('LOG:', ...args); };
+  console.error = function(...args) { oldErr.apply(console, args); appendLog('ERR:', ...args); };
+  window.onerror = function(msg, src, line, col, err) {
+    appendLog('ERROR:', `${msg} (dòng ${line})`);
+  };
+  window.addEventListener('unhandledrejection', function(ev){
+    appendLog('UNHANDLED REJECTION:', ev.reason);
+  });
+})();
+
+/* ============================
+   Các phần tử DOM
+   ============================ */
+const uploadZone = document.getElementById('uploadZone');
+const fileInput = document.getElementById('fileInput');
+const startBtn = document.getElementById('startBtn');
+const downloadBtn = document.getElementById('downloadBtn');
+const progressContainer = document.getElementById('progressContainer');
+const frameProgressBar = document.getElementById('frameProgressBar');
+const frameProgress = document.getElementById('frameProgress');
+const packProgressBar = document.getElementById('packProgressBar');
+const packProgress = document.getElementById('packProgress');
+const status = document.getElementById('status');
+const fpsInput = document.getElementById('fpsInput');
+const resolutionSelect = document.getElementById('resolutionSelect');
+
+/* --- cấu hình grid (giữ nguyên gốc) --- */
+const BG_COMMON_GRID = { COLUMNS: 30, ROWS: 50, X_START: -1500, Y_START: -1500, STEP: 100 };
+const ANIM_GRID = { COLUMNS: 30, ROWS: 50, X_START: 1500, Y_START: 1500, STEP: 100 };
+
+/* ============================
+   Kéo thả & chọn file
+   ============================ */
+uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+uploadZone.addEventListener('drop', (e) => {
+  e.preventDefault(); uploadZone.classList.remove('dragover');
+  const files = e.dataTransfer.files;
+  if (files.length > 0) { fileInput.files = files; startBtn.disabled = false; console.log('File đã chọn:', files[0].name); }
+});
+uploadZone.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', () => {
+  startBtn.disabled = !fileInput.files.length;
+  if (fileInput.files.length) console.log('File selected:', fileInput.files[0].name);
+});
+
+/* ============================
+   Helper: resize frame
+   ============================ */
+async function createResizedFrame(blob, width, height) {
+  return new Promise((resolve, reject) => {
+    try {
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          canvas.toBlob((b) => {
+            if (!b) reject(new Error('Canvas.toBlob trả về null'));
+            else resolve(b);
+          }, 'image/jpeg', 0.9);
+        } catch(err) { reject(err); }
+      };
+      img.onerror = (e) => reject(new Error('Lỗi load ảnh khi resize: ' + e));
+      img.src = URL.createObjectURL(blob);
+    } catch(e) { reject(e); }
+  });
+}
+
+/* ============================
+   Helper random hash & offsets
+   ============================ */
+function randomHash(len = 32) {
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  let str = '';
+  for (let i = 0; i < len; i++) str += chars[Math.floor(Math.random() * chars.length)];
+  return str;
+}
+
+function calculateBGCommonOffset(index) {
+  const row = Math.floor(index / BG_COMMON_GRID.COLUMNS);
+  const col = index % BG_COMMON_GRID.COLUMNS;
+  const xOffset = BG_COMMON_GRID.X_START + (col * BG_COMMON_GRID.STEP);
+  const yOffset = BG_COMMON_GRID.Y_START + (row * BG_COMMON_GRID.STEP);
+  return [`${xOffset}%`, `${yOffset}%`];
+}
+
+function calculateAnimOffset(index) {
+  const row = Math.floor(index / ANIM_GRID.COLUMNS);
+  const col = index % ANIM_GRID.COLUMNS;
+  const xOffset = ANIM_GRID.X_START - (col * ANIM_GRID.STEP);
+  const yOffset = ANIM_GRID.Y_START - (row * ANIM_GRID.STEP);
+  return [`${xOffset}%`, `${yOffset}%`];
+}
+
+/* ============================
+   Xử lý chính: tạo pack
+   ============================ */
+startBtn.addEventListener('click', async () => {
+  try {
+    if (!fileInput.files || fileInput.files.length === 0) { alert('Vui lòng chọn 1 file video'); return; }
+
+    const fps = Math.max(1, Math.min(120, parseInt(fpsInput.value) || 24));
+    if (fps > 60) {
+      if (!confirm('⚠️ FPS cao (>60) có thể gây crash trên điện thoại. Tiếp tục?')) {
+        console.log('Người dùng hủy vì FPS cao');
+        return;
+      }
+    }
+    console.log('Số FPS mong muốn:', fps);
+
+    // Tạo video element để đọc metadata & seek
+    const video = document.createElement('video');
+    video.muted = true;
+    video.preload = 'metadata';
+    video.src = URL.createObjectURL(fileInput.files[0]);
+
+    await new Promise((resolve, reject) => {
+      let onLoaded = () => resolve();
+      let onErr = (e) => reject(new Error('Lỗi load video: ' + e));
+      video.onloadedmetadata = onLoaded;
+      video.onerror = onErr;
+      // bảo đảm thời gian metadata load
+      setTimeout(() => {
+        if (video.duration && video.videoWidth) resolve();
+      }, 800);
+    });
+
+    console.log('Video info:', { duration: video.duration, width: video.videoWidth, height: video.videoHeight });
+
+    // Tính tổng frame
+    let totalFrames = Math.ceil(video.duration * fps);
+    const maxFrames = BG_COMMON_GRID.COLUMNS * BG_COMMON_GRID.ROWS;
+    if (totalFrames > maxFrames) {
+      console.warn(`Video có nhiều frame (${totalFrames}) hơn grid (${maxFrames}). Giới hạn ${maxFrames} frame.`);
+      totalFrames = maxFrames;
+    }
+
+    // Cấu hình hiển thị tiến trình
+    startBtn.disabled = true;
+    downloadBtn.style.display = 'none';
+    progressContainer.style.display = 'block';
+    frameProgressBar.style.width = '0%';
+    packProgressBar.style.width = '0%';
+    frameProgress.textContent = '0%';
+    packProgress.textContent = '0%';
+    status.textContent = 'Đang trích xuất khung hình...';
+    console.log('Bắt đầu trích xuất', totalFrames, 'frames');
+
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth || 1920;
+    canvas.height = video.videoHeight || 1080;
+    const ctx = canvas.getContext('2d');
+    const frames = [];
+
+    const startTime = performance.now();
+
+    // Trích xuất frame từng khung
+    for (let i = 0; i < totalFrames; i++) {
+      try {
+        await new Promise((resolve, reject) => {
+          video.currentTime = i / fps;
+          const onSeeked = () => {
+            try {
+              ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+              canvas.toBlob((blob) => {
+                if (!blob) {
+                  reject(new Error('canvas.toBlob returned null for frame ' + i));
+                } else {
+                  frames.push({ name: `frame_${i.toString().padStart(4,'0')}.png`, blob });
+                  const progress = ((i + 1) / totalFrames) * 100;
+                  frameProgressBar.style.width = `${progress}%`;
+                  frameProgress.textContent = `${Math.floor(progress)}%`;
+                  if ((i+1) % 20 === 0) console.log(`Đã trích xuất ${i+1} / ${totalFrames} frames`);
+                  resolve();
+                }
+              }, 'image/png');
+            } catch(err) { reject(err); }
+          };
+          video.onseeked = onSeeked;
+          video.onerror = (e) => reject(new Error('Lỗi khi seek video: ' + e));
+        });
+      } catch(ex) {
+        console.error('Lỗi khi trích xuất frame', i, ex);
+        // nếu lỗi ở 1 frame, ta dừng để tránh zip hỏng
+        alert('Lỗi khi trích xuất khung hình: ' + ex.message);
+        startBtn.disabled = false;
+        status.textContent = 'Đã xảy ra lỗi khi trích xuất';
+        return;
+      }
+    }
+
+    console.log('Hoàn tất trích xuất frames:', frames.length);
+    status.textContent = 'Đang tạo gói tài nguyên...';
+    const packStart = performance.now();
+
+    // Tạo cấu trúc zip (giữ logic gốc)
+    const zip = new JSZip();
+
+    // manifest.json
+    const manifest = {
+      format_version: 2,
+      header: {
+        description: "Gói tài nguyên tạo tự động\n> Yêu cầu BetMC 1.2+",
+        name: "BG_animation_for_BetMc",
+        uuid: crypto.randomUUID ? crypto.randomUUID() : randomHash(16),
+        version: [1,0,0],
+        min_engine_version: [1,16,0]
+      },
+      subpacks: [
+        { "folder_name": "0", "name": "OFF", "memory_tier": 0 },
+        { "folder_name": "1080", "name": "ON", "memory_tier": 0 }
+      ],
+      modules: [
+        { description: "Resource pack cho nền động BetMC", type: "resources", uuid: crypto.randomUUID ? crypto.randomUUID() : randomHash(16), version: [1,0,0] }
+      ]
+    };
+    zip.file("manifest.json", JSON.stringify(manifest, null, 2));
+    packProgressBar.style.width = '10%'; packProgress.textContent = '10%';
+    console.log("Đã tạo manifest");
+
+    packProgressBar.style.width = '20%'; packProgress.textContent = '20%';
+
+    // config files
+    const config0 = { "namespace": "betmc_config", "betmc_main_config": { "$betmc_scr_backround_path": "betmc_background/betmc_background_static_patch" } };
+    const config1080 = { "namespace": "betmc_config", "betmc_main_config": { "$use_background_static_customs": false, "$use_setting_background_static_customs": false, "$use_background_animation": true } };
+    zip.file("subpacks/0/betmc_config/config.json", JSON.stringify(config0, null, 2));
+    zip.file("subpacks/1080/betmc_config/config.json", JSON.stringify(config1080, null, 2));
+    packProgressBar.style.width = '30%'; packProgress.textContent = '30%';
+    console.log("Đã tạo config");
+
+    // ui defs
+    const uiDefs = {
+      "namespace": "betmc_background",
+      "betmc_animation_background_frame@betmc_common.empty_panel": {
+        "anims": ["@p5jieh6d819mtqt5qpg4ifu64eiv0289.betmc_background-js:17:19"],
+        "controls": [],
+        "size": ["100%", "100%"],
+        "offset": "@p5jieh6d819mtqt5qpg4ifu64eiv0289.betmc_background-js:17:19",
+        "anchor_from": "center",
+        "anchor_to": "center"
+      }
+    };
+
+    // Add control entries and image entries for each frame
+    for (let i = 0; i < frames.length; i++) {
+      const hash = randomHash(32);
+      const controlKey = `${hash}@betmc_background.betmc_background-js:43:31${i === 0 ? '' : `[${i}]`}`;
+      uiDefs["betmc_animation_background_frame@betmc_common.empty_panel"].controls.push({ [controlKey]: {} });
+      const [xOffset, yOffset] = calculateBGCommonOffset(i);
+      uiDefs[`betmc_background-js:43:31${i === 0 ? '' : `[${i}]`}`] = {
+        "type": "image",
+        "texture": `betmc_background/betmc_background_frame/betmc_img_${i+1}_frame`,
+        "fill": true,
+        "size": ["100%","100%"],
+        "offset": [xOffset, yOffset]
+      };
+    }
+
+    zip.file("ui/_ui_defs.json", JSON.stringify({ "ui_defs": ["betmc_ui/betmc_common/p5jieh6d819mtqt5qpg4ifu64eiv0289"] }, null, 2));
+    zip.file("betmc_ui/betmc_common/betmc_bg_common.json", JSON.stringify(uiDefs, null, 2));
+    packProgressBar.style.width = '40%'; packProgress.textContent = '40%';
+    console.log("Đã tạo ui_defs")
+
+    // animation object
+    const animNamespace = "p5jieh6d819mtqt5qpg4ifu64eiv0289";
+    const animObj = { namespace: animNamespace };
+    const animKeyBase = "betmc_background-js:17:19";
+    const animDuration = 1 / fps;
+
+    for (let i = 0; i < frames.length; i++) {
+      const [xOffset, yOffset] = calculateAnimOffset(i);
+      const key = i === 0 ? animKeyBase : `${animKeyBase}-${i}`;
+      const nextKey = i + 1 < frames.length ? `@${animNamespace}.${animKeyBase}-${i+1}` : `@${animNamespace}.${animKeyBase}`;
+      animObj[key] = {
+        from: [xOffset, yOffset],
+        to: [xOffset, yOffset],
+        next: nextKey,
+        anim_type: "offset",
+        duration: animDuration
+      };
+    }
+    zip.file(`betmc_ui/betmc_common/${animNamespace}`, JSON.stringify(animObj, null, 2));
+
+    // Add frames (resizing if cần)
+    let framesAdded = 0;
+    for (const frame of frames) {
+      try {
+        let frameBlob = frame.blob;
+        const selectedResolution = resolutionSelect.value;
+        if (selectedResolution === '1080p') {
+          frameBlob = await createResizedFrame(frame.blob, 1920, 1080);
+        } else if (selectedResolution === '7020p') {
+          frameBlob = await createResizedFrame(frame.blob, 3840, 2160);
+        }
+        zip.file(`subpacks/1080/betmc_background/betmc_background_frame/betmc_img_${framesAdded+1}_frame.jpg`, frameBlob);
+        framesAdded++;
+        const progress = (framesAdded / frames.length) * 50 + 40; // 40-90%
+        packProgressBar.style.width = `${progress}%`;
+        packProgress.textContent = `${Math.floor(progress)}%`;
+        if (framesAdded % 30 === 0) console.log(`Đã thêm ${framesAdded}/${frames.length} frames vào zip`);
+      } catch(ex) {
+        console.error('Lỗi khi thêm frame vào zip:', ex);
+        alert('Lỗi khi xử lý ảnh trước khi nén: ' + ex.message);
+        startBtn.disabled = false;
+        status.textContent = 'Lỗi khi thêm frame vào gói';
+        return;
+      }
+    }
+
+    // First frame as icon & static background
+try {
+  const iconBlob = frames[0].blob;
+  zip.file("pack_icon.png", iconBlob);
+  zip.file("subpacks/0/betmc_background/betmc_background_static_patch.jpg", iconBlob);
+  packProgressBar.style.width = '95%';
+  packProgress.textContent = '95%';
+} catch (e) {
+  console.error('Lỗi khi thêm pack_icon:', e);
+}
+
+// === ÂM THANH MENU ===
+try {
+  const musicFiles = document.getElementById("musicUpload")?.files;
+  if (musicFiles && musicFiles.length > 0) {
+    const soundFolder = "sound/music/menu/";
+
+    // Hàm thêm file âm thanh vào zip
+    const addMusicFile = (targetName, sourceFile) => {
+      zip.file(`${soundFolder}${targetName}.ogg`, sourceFile);
+    };
+
+    if (musicFiles.length === 1) {
+      // 1 file -> copy ra 4
+      for (let i = 1; i <= 4; i++) addMusicFile(`menu${i}`, musicFiles[0]);
+    } else if (musicFiles.length === 2) {
+      // 2 file -> mỗi file 2 lần
+      for (let i = 1; i <= 2; i++) addMusicFile(`menu${i}`, musicFiles[0]);
+      for (let i = 3; i <= 4; i++) addMusicFile(`menu${i}`, musicFiles[1]);
+    }
+  }
+
+  // --- Generate zip (nén) ---
+  try {
+    console.log('Bắt đầu nén zip (có thể mất thời gian)...');
+    const content = await zip.generateAsync({
+      type: "blob",
+      compression: "DEFLATE",
+      compressionOptions: { level: 9 }
+    });
+
+    packProgressBar.style.width = '100%';
+    packProgress.textContent = '100%';
+    const packTime = ((performance.now() - packStart) / 1000).toFixed(1);
+    status.textContent = `Đã tạo gói thành công trong ${packTime}s!`;
+    console.log('Zip đã tạo xong, blob size:', content.size || '(k/c)');
+
+    // Tạo link tải
+    const url = URL.createObjectURL(content);
+    downloadBtn.onclick = () => {
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'BG_animation_for_BetMc.mcpack';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    };
+
+    // Hiển thị nút tải
+    downloadBtn.style.display = 'inline-block';
+    console.log('Nút tải đã hiển thị');
+
+    // Tự động scroll tới nút tải trên điện thoại (tốt cho UX)
+    try {
+      downloadBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } catch (e) {
+      console.log("abc", e);
+    }
+
+  } catch (zipErr) {
+    console.error('Lỗi khi nén zip:', zipErr);
+    alert('Lỗi khi nén gói: ' + (zipErr.message || zipErr));
+    status.textContent = 'Lỗi khi nén gói tài nguyên';
+    startBtn.disabled = false;
+    return;
+  }
+
+  const totalTime = ((performance.now() - startTime) / 1000).toFixed(1);
+  console.log('Toàn bộ quá trình hoàn tất trong', totalTime, 'giây');
+  startBtn.disabled = false;
+
+} catch (errMain) {
+  console.error('Lỗi chính:', errMain);
+  alert('Đã xảy ra lỗi: ' + (errMain.message || errMain));
+  status.textContent = 'Đã xảy ra lỗi';
+  startBtn.disabled = false;
+}
+});
+</script>
+</body>
+</html>
