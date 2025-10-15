@@ -641,8 +641,7 @@ startBtn.addEventListener('click', async () => {
       };
     }
     zip.file(`betmc_ui/betmc_common/${animNamespace}`, JSON.stringify(animObj, null, 2));
-
-...
+    
     // Add frames (resizing if cần)
     let framesAdded = 0;
     for (const frame of frames) {
