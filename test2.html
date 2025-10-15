@@ -716,8 +716,14 @@ startBtn.addEventListener('click', async () => {
   }
 });
 
-document.getElementById('musicExtension').onclick = () => {
-  window.open('https://github.com/Khangbo84/Music-Extension/releases', '_blank');
+document.getElementById('musicExtension').onclick = function() {
+  const url = "LINK_RAW_CỦA_BẠN";
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'MusicExtension.mcaddon';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 };
 </script>
 </body>
